@@ -1,7 +1,6 @@
 package model;
 
 
-
 import model.exceptions.MyDbException;
 import model.utils.DbUtils;
 
@@ -9,9 +8,11 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.sql.DriverManager.getConnection;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 
@@ -98,10 +99,10 @@ public class PostrgreDbOPerations implements DbOperations {
     @Override
     public void dropTable(String tableName) {
         try (Statement statement = getConnect().createStatement()) {
-           boolean isTableExists =  statement.execute("DROP TABLE " + tableName);
-           if (!isTableExists) {
-               throw new MyDbException(String.format("table %s does not exist", tableName));
-           }
+            boolean isTableExists = statement.execute("DROP TABLE " + tableName);
+            if (!isTableExists) {
+                throw new MyDbException(String.format("table %s does not exist", tableName));
+            }
         } catch (SQLException e) {
             throw new MyDbException(format("%s table caanot be dropped", tableName), e);
         }
@@ -111,15 +112,18 @@ public class PostrgreDbOPerations implements DbOperations {
     public void create(String tableName, List<String> columns) {
         String createTable = format("CREATE TABLE %s", tableName) + " ( " + columns.stream().collect(joining(" text,", "", " text")) + ")";
         try (Statement statement = getConnect().createStatement()) {
-            statement.executeUpdate(createTable);
+            int result = statement.executeUpdate(createTable);
+            if (result != 0) {
+                throw new MyDbException(format("Table %s cannot is not created", tableName));
+            }
         } catch (SQLException e) {
-            throw new MyDbException(format("Data %s cannot be created", tableName));
+            throw new MyDbException(format("Table %s cannot be created", tableName));
         }
     }
 
     @Override
     public Data find(String tableName) {
-      return find(() -> tableName);
+        return find(() -> tableName);
     }
 
     private Data find(Supplier<String> stringSupplier) {
@@ -169,8 +173,10 @@ public class PostrgreDbOPerations implements DbOperations {
                 statement.addBatch(format(sqlTemplateString, row.getValuesInAllColumns()
                         .stream().map(s -> String.format("'%s'", s)).collect(joining(","))));
             }
-            statement.executeBatch();
-
+            int[] result = statement.executeBatch();
+            if (!stream(result).allMatch(value -> value == 1)) {
+                throw new MyDbException("Some columns may not be inserted");
+            }
         } catch (SQLException e) {
             throw new MyDbException("Cannot insert to table " + tableName);
         }
@@ -179,7 +185,7 @@ public class PostrgreDbOPerations implements DbOperations {
     @Override
     public void update(String tableName, String column, String value, Data data) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (String col: data.getNames()) {
+        for (String col : data.getNames()) {
             stringBuilder.append(col).append("='%s',");
         }
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
@@ -187,11 +193,14 @@ public class PostrgreDbOPerations implements DbOperations {
         final String sqlTemplate = "UPDATE " + tableName + " SET " + stringBuilder.toString() +
                 " WHERE " + column + " = " + "'" + value + "'";
 
-        try(Statement statement = getConnect().createStatement()) {
+        try (Statement statement = getConnect().createStatement()) {
             for (Row row : data.getValues()) {
                 statement.addBatch(format(sqlTemplate, row.getValuesInAllColumns().toArray()));
             }
-            statement.executeBatch();
+            int[] result = statement.executeBatch();
+            if (!stream(result).allMatch(val -> val == 1)) {
+                throw new MyDbException("Some columns may not be updated");
+            }
 
         } catch (SQLException e) {
             throw new MyDbException("Cannot update DB", e);
@@ -205,7 +214,7 @@ public class PostrgreDbOPerations implements DbOperations {
         try (Statement statement = getConnect().createStatement()) {
             statement.executeUpdate(deleteQuery);
         } catch (SQLException e) {
-            throw new MyDbException("Cannot delete from  DB",e);
+            throw new MyDbException("Cannot delete from  DB", e);
         }
         return selected;
 
