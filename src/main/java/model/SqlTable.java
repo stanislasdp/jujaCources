@@ -2,6 +2,7 @@ package model;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
@@ -36,5 +37,19 @@ public class SqlTable implements Data {
     public List<String> getColumnValues(String columnName) {
         int index = columnNames.indexOf(columnName);
         return rows.stream().map(row -> row.getValueInColumn(index)).collect(toList());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SqlTable sqlTable = (SqlTable) o;
+        return Objects.equals(columnNames, sqlTable.columnNames) &&
+                Objects.equals(rows, sqlTable.rows);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(columnNames, rows);
     }
 }

@@ -123,11 +123,11 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public Data find(String tableName) {
-        return find(() -> tableName);
+        return find(() -> "SELECT * FROM " + tableName);
     }
 
     private Data find(Supplier<String> stringSupplier) {
-        final String sql = "SELECT * FROM " + stringSupplier.get();
+        final String sql = stringSupplier.get();
         List<String> columns;
         List<List<String>> values = new ArrayList<>();
         try (Statement statement = getConnect().createStatement();
@@ -209,7 +209,7 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public Data delete(String tableName, String column, String value) {
-        Data selected = find(() -> format("SELECT FROM %s WHERE %s = %s", tableName, column, value));
+        Data selected = find(() -> format("SELECT * FROM %s WHERE %s = %s", tableName, column, value));
         final String deleteQuery = format("DELETE FROM %s WHERE %s = %s", tableName, column, value);
         try (Statement statement = getConnect().createStatement()) {
             statement.executeUpdate(deleteQuery);

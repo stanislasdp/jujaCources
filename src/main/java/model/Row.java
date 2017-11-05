@@ -1,6 +1,7 @@
 package model;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by stas on 10/19/17.
@@ -31,4 +32,16 @@ public class Row {
         return table.getNames();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Row row = (Row) o;
+        return Objects.equals(data, row.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(table, data);
+    }
 }

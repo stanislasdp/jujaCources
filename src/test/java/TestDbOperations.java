@@ -1,22 +1,26 @@
 
 
 import com.google.common.collect.ImmutableList;
-import model.Data;
-import model.DbOperations;
-import model.PostrgreDbOPerations;
-import model.SqlTable;
+import model.*;
 import model.exceptions.MyDbException;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.mockito.stubbing.OngoingStubbing;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static java.sql.DriverManager.getConnection;
 import static java.util.stream.Collectors.toList;
@@ -167,19 +171,10 @@ public abstract class TestDbOperations {
     public void findTableTest() throws SQLException {
         //GIVEN
         final String tableToFind = "Person5";
-        ResultSet resultSet = mock(ResultSet.class);
-        when(resultSet.next()).thenReturn(true).thenReturn(false);
-        ResultSetMetaData metaData = mock(ResultSetMetaData.class);
-        when(resultSet.getMetaData()).thenReturn(metaData);
-        when(metaData.getColumnCount()).thenReturn(4);
-        when(metaData.getColumnLabel(1)).thenReturn("id");
-        when(metaData.getColumnLabel(2)).thenReturn("firstname");
-        when(metaData.getColumnLabel(3)).thenReturn("lastname");
-        when(metaData.getColumnLabel(4)).thenReturn("age");
-        when(resultSet.getString(1)).thenReturn("testId");
-        when(resultSet.getString(2)).thenReturn("testFirstName");
-        when(resultSet.getString(3)).thenReturn("testLastName");
-        when(resultSet.getString(4)).thenReturn("testId");
+
+        Data expectedData = new SqlTable(ImmutableList.of("id", "firstname", "lastname", "age")
+                , ImmutableList.of(ImmutableList.of("testId", "testFirstName", "testLastName", "testAge")));
+        ResultSet resultSet = mockResultSetForData(expectedData);
         when(statement.executeQuery(anyString())).thenReturn(resultSet);
 
         //WHEN
@@ -193,7 +188,7 @@ public abstract class TestDbOperations {
         assertThat("columns contains data", data.getValues().stream()
                 .flatMap(row -> row.getValuesInAllColumns().stream())
                 .collect(toList()), allOf(hasItem("testId"), hasItem("testFirstName")
-                , hasItem("testLastName"), hasItem("testId")));
+                , hasItem("testLastName"), hasItem("testAge")));
     }
 
 
@@ -272,37 +267,63 @@ public abstract class TestDbOperations {
 
     @Test
     public void deleteTest() throws SQLException {
+        //GIVEN
+        Data expectedData = new SqlTable(ImmutableList.of("id", "column")
+                , ImmutableList.of(ImmutableList.of("1", "value")));
+        ResultSet resultSet = mockResultSetForData(expectedData);
         final String table = "Person8";
         final String column = "column";
         final String value = "value";
-        Data expectedData = new SqlTable(ImmutableList.of("id","column")
-                , ImmutableList.of(ImmutableList.of("1", "value")));
+        when(statement.executeQuery(anyString())).thenReturn(resultSet);
 
-        DbOperations dbOperations = spy(DbOperations.class);
-        when(dbOperations.find(anyString())).thenReturn(expectedData);
-        dbOperations.delete(table, column, value);
+        //WHEN
+        Data actualData = dbOperations.delete(table, column, value);
+        verify(statement).executeQuery(argumentCaptor.capture());
+        verify(statement).executeUpdate(argumentCaptor.capture());
 
-       /* when(statement.executeQuery(argumentCaptor.capture()));*/
-        when(statement.executeUpdate(argumentCaptor.capture()));
-        final String expectedSelectSql = "SELECT FROM Person8 WHERE column = value";
+        //THEN
+        final String expectedSelectSql = "SELECT * FROM Person8 WHERE column = value";
         final String expectedDeleteSql = "DELETE FROM Person8 WHERE column = value";
         assertEquals(expectedSelectSql, argumentCaptor.getAllValues().get(0));
         assertEquals(expectedDeleteSql, argumentCaptor.getAllValues().get(1));
-
-
-       /* @Override
-        public Data delete(String tableName, String column, String value) {
-            Data selected = find(() -> format("SELECT FROM %s WHERE %s = %s", tableName, column, value));
-            final String deleteQuery = format("DELETE FROM %s WHERE %s = %s", tableName, column, value);
-            try (Statement statement = getConnect().createStatement()) {
-                statement.executeUpdate(deleteQuery);
-            } catch (SQLException e) {
-                throw new MyDbException("Cannot delete from  DB",e);
-            }
-            return selected;
-
-        }*/
+        assertThat("sql results should be the same", expectedData, is(equalTo(actualData)));
     }
+
+    private ResultSet mockResultSetForData(Data data) throws SQLException {
+        ResultSet resultSet = mock(ResultSet.class);
+        ResultSetMetaData metaData = mock(ResultSetMetaData.class);
+        when(resultSet.getMetaData()).thenReturn(metaData);
+        int columnsSize = data.getNames().size();
+        when(metaData.getColumnCount()).thenReturn(columnsSize);
+
+        List<String> columns = (List<String>) data.getNames();
+        for (int i = 1; i <= columnsSize; i++) {
+            when(metaData.getColumnLabel(i)).thenReturn(columns.get(i - 1));
+        }
+
+        int rowsSize = data.getValues().size();
+        List<Row> rows = (List<Row>) data.getValues();
+        for (int i = 1; i <= rowsSize; i++) {
+            int[] finalI = new int[]{i};
+            when(resultSet.next()).thenAnswer(invocation -> {
+                if (finalI[0] <= rowsSize) {
+                    finalI[0] = ++finalI[0];
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+            int tempCount = 1;
+            while (tempCount <= columnsSize) {
+                when(resultSet
+                        .getString(tempCount))
+                        .thenReturn(rows.get(i - 1).getValueInColumn(tempCount - 1));
+                tempCount++;
+            }
+        }
+        return resultSet;
+    }
+
 
     public abstract DbOperations getDatabaseManager();
 
