@@ -3,7 +3,6 @@ package controller.commands;
 import java.util.List;
 
 import model.DbOperations;
-import view.*;
 import view.view.View;
 
 /**
@@ -24,5 +23,6 @@ public class CreateTableCommand implements Command<String> {
     public void execute(List<String> parameters) {
         String tableName = parameters.get(0);
         dbOperations.create(tableName, parameters.subList(1, parameters.size()));
+        view.write(String.format("table %s has been created", tableName));
     }
 }

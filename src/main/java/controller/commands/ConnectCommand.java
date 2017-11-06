@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Properties;
 
 import model.DbOperations;
-import view.*;
 import view.view.View;
 
 /**
@@ -14,7 +13,6 @@ public class ConnectCommand implements Command<String> {
 
     private DbOperations dbOperations;
     private View view;
-    private String commandSample;
 
     public ConnectCommand(DbOperations dbOperations, View view) {
         this.dbOperations = dbOperations;

@@ -7,9 +7,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 import view.view.View;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import static java.util.stream.Collectors.joining;
@@ -39,7 +41,6 @@ public class TestControllerCommands {
         //GIVEN
         Command<String> command = new ConnectCommand(dbOperations, view);
         ArgumentCaptor<Properties> captorProp = ArgumentCaptor.forClass(Properties.class);
-        ArgumentCaptor<String> captorString = ArgumentCaptor.forClass(String.class);
         doNothing().when(dbOperations).connect(any());
 
         //WHEN
@@ -57,16 +58,13 @@ public class TestControllerCommands {
             setProperty("password", "Password");
         }}, captorProp.getValue());
 
-        verify(view).write(captorString.capture());
-        assertEquals("Successful connect to db", captorString.getValue());
+        verify(view).write(eq("Successful connect to db"));
     }
 
 
     @Test
     public void createTableCommandTest() {
         Command<String> command = new CreateTableCommand(dbOperations, view);
-        ArgumentCaptor<String> captorString = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<List> captorList = ArgumentCaptor.forClass(List.class);
         List<String> parameters = new ArrayList<String>() {{
             add("Person1");
             add("firstColumn");
@@ -74,20 +72,15 @@ public class TestControllerCommands {
             add("secondColumn");
             add("secondValue");
         }};
-
         command.execute(parameters);
-        verify(dbOperations).create(captorString.capture(), captorList.capture());
-        verify(view).write(captorString.capture());
-        assertEquals("Person1", captorString.getAllValues().get(0));
-        assertEquals(parameters.subList(1, parameters.size()), captorList.getValue());
-        assertEquals("table Person1 has been created", captorString.getAllValues().get(1));
+        verify(dbOperations).create(eq("Person1"), eq(parameters.subList(1, parameters.size())));
+        verify(view).write(eq("table Person1 has been created"));
     }
 
     @Test
     public void getTablesCommandTest() {
         //GIVEN
         Command<String> command = new GetTablesCommand(dbOperations, view);
-        ArgumentCaptor<String> captorString = ArgumentCaptor.forClass(String.class);
         when(dbOperations.getTables()).thenReturn(new ArrayList<String>(){{
             add("Person2");
             add("Person3");
@@ -95,28 +88,25 @@ public class TestControllerCommands {
         //WHEN
         command.execute(new ArrayList<>());
         //THEN
-        verify(view).write(captorString.capture());
-        assertEquals("Person2, Person3", captorString.getValue());
+        verify(view).write(eq("Person2, Person3"));
     }
 
     @Test
     public void getTableColumnsCommandTest() {
         //GIVEN
         Command<String> command = new GetTableColumnsCommand(dbOperations, view);
-        ArgumentCaptor<String> captorStringDb = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> captorStringView = ArgumentCaptor.forClass(String.class);
         Data data = new SqlTable(ImmutableList.of("id", "value"),
                 ImmutableList.of(ImmutableList.of("1", "value1"), ImmutableList.of("2", "value2")));
         when(dbOperations.find(anyString())).thenReturn(data);
 
         //WHEN
         command.execute(ImmutableList.of("Person4"));
-        verify(dbOperations).find(captorStringDb.capture());
-        verify(view, times(3)).write(captorStringView.capture());
 
-        assertEquals("Person4", captorStringDb.getValue());
-        assertEquals("id value\n" + "1 value1\n" +"2 value2",
-                captorStringView.getAllValues().stream().collect(joining("\n")));
+        //THEN
+        verify(dbOperations).find(eq("Person4"));
+        verify(view).write((eq("id value")));
+        verify(view).write((eq("1 value1")));
+        verify(view).write((eq("2 value2")));
     }
 
     @Test
@@ -128,12 +118,9 @@ public class TestControllerCommands {
         //WHEN
         command.execute(ImmutableList.of("Person6"));
 
-        verify(dbOperations).clearTable(captorString.capture());
-        verify(view).write(captorString.capture());
-
         //THEN
-        assertEquals("Person6", captorString.getAllValues().get(0));
-        assertEquals("Table Person6 is cleared", captorString.getAllValues().get(1));
+        verify(dbOperations).clearTable(eq("Person6"));
+        verify(view).write(eq("Table Person6 is cleared"));
     }
 
     @Test
@@ -155,22 +142,44 @@ public class TestControllerCommands {
     @Test
     public void insertRowCommandTest() {
         //GIVEN
-        Command command = new InsertCommand(dbOperations, view);
-        ArgumentCaptor<String> captorString = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Data> captorData = ArgumentCaptor.forClass(Data.class);
-
-        Data expectedData = new SqlTable(ImmutableList.of("id", "firstname", "secondname"),
-                ImmutableList.of(ImmutableList.of("6", "stas", "kiryan")));
+        Command<String> command = new InsertCommand(dbOperations, view);
 
         //WHEN
         command.execute(ImmutableList.of("Person5", "id","6", "firstname", "stas", "secondname" ,"kiryan"));
 
         //THEN
-        verify(dbOperations).insert(captorString.capture(), captorData.capture());
-        verify(view).write(captorString.capture());
-        assertEquals("Person5", captorString.getAllValues().get(0));
-        assertEquals(expectedData, captorData.getValue());
-        assertEquals("new row is inserted to Person5", captorString.getAllValues().get(1));
+        verify(dbOperations).insert(eq("Person5"),
+                eq(new SqlTable(ImmutableList.of("id", "firstname", "secondname"),
+                ImmutableList.of(ImmutableList.of("6", "stas", "kiryan")))));
+        verify(view).write(eq("new row is inserted to Person5"));
+    }
+
+    @Test
+    public void updateCommandTest() {
+        //GIVEN
+        Command<String> command = new UpdateCommand(dbOperations, view);
+
+        //WHEN
+        command.execute(ImmutableList.of("Person6", "column1", "value1", "column2", "value2", "column3", "value3"));
+
+        //THEN
+        verify(dbOperations).update(eq("Person6"), eq("column1"), eq("value1"),
+                eq(new SqlTable(ImmutableList.of("column2", "column3")
+                        , ImmutableList.of(ImmutableList.of("value2", "value3")))));
+        verify(view).write(eq("column1 column2 column3"));
+        verify(view).write(eq("value1 value2 value3"));
+    }
+
+    @Test
+    public void exitCommandTest() {
+        //GIVEN
+        Command<String> command = new ExitCommand(dbOperations ,view);
+
+        //WHEN
+        command.execute(Collections.emptyList());
+
+        //THEN
+        view.write("Connection to db has been closed");
     }
 
 }

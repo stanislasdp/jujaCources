@@ -75,10 +75,8 @@ public abstract class TestDbOperations {
         String sql = "SELECT table_schema || '.' || table_name FROM information_schema.tables " +
                 "WHERE table_type = 'BASE TABLE' " +
                 "AND table_schema NOT IN ('pg_catalog', 'information_schema')";
-        verify(statement).executeQuery(argumentCaptor.capture());
-
-        //THEN
-        assertEquals(sql, argumentCaptor.getValue());
+        //THEN;
+        verify(statement).executeQuery(eq(sql));
         assertThat("list should contain al tables", tables, containsInAnyOrder(tableFirst, tableSecond));
     }
 
@@ -92,10 +90,7 @@ public abstract class TestDbOperations {
         //WHEN
         dbOperations.clearTable(tableToDelete);
         //THEN
-        verify(statement).execute(argumentCaptor.capture());
-        final String expectedSql = String.format("DELETE FROM %s", tableToDelete);
-        assertEquals(expectedSql, argumentCaptor.getValue());
-
+        verify(statement).execute(eq(String.format("DELETE FROM %s", tableToDelete)));
     }
 
     @Test(expected = MyDbException.class)
@@ -116,9 +111,7 @@ public abstract class TestDbOperations {
         dbOperations.dropTable(tableToDrop);
 
         //THEN
-        final String expectedSql = String.format("DROP TABLE %s", tableToDrop);
-        verify(statement).execute(argumentCaptor.capture());
-        assertEquals(expectedSql, argumentCaptor.getValue());
+        verify(statement).execute(eq(String.format("DROP TABLE %s", tableToDrop)));
     }
 
     @Test(expected = MyDbException.class)
@@ -145,9 +138,7 @@ public abstract class TestDbOperations {
         dbOperations.create(tableToCreate, tableColumns);
 
         //THEN
-        verify(statement).executeUpdate(argumentCaptor.capture());
-        String expectedSql = "CREATE TABLE Person4 ( id text,firstname text,lastname text,age text)";
-        assertEquals(expectedSql, argumentCaptor.getValue());
+        verify(statement).executeUpdate(eq("CREATE TABLE Person4 ( id text,firstname text,lastname text,age text)"));
     }
 
     @Test(expected = MyDbException.class)
@@ -160,12 +151,11 @@ public abstract class TestDbOperations {
             add("age");
         }};
         final String tableToCreate = "Person4";
-        when(statement.executeUpdate(anyString())).thenReturn(1);
-
         //WHEN
+        when(statement.executeUpdate(anyString())).thenReturn(1);
+        //THEN
         dbOperations.create(tableToCreate, tableColumns);
     }
-
 
     @Test
     public void findTableTest() throws SQLException {
@@ -180,9 +170,7 @@ public abstract class TestDbOperations {
         //WHEN
         Data data = dbOperations.find(tableToFind);
         //THEN
-        verify(statement).executeQuery(argumentCaptor.capture());
-        final String expectedSql = "SELECT * FROM " + tableToFind;
-        assertEquals(expectedSql, argumentCaptor.getValue());
+        verify(statement).executeQuery(eq("SELECT * FROM " + tableToFind));
         assertThat("data object contains columns", data.getNames(),
                 allOf(hasItem("id"), hasItem("firstname"), hasItem("lastname"), hasItem("age")));
         assertThat("columns contains data", data.getValues().stream()
@@ -196,7 +184,7 @@ public abstract class TestDbOperations {
     public void insertRowTest() throws SQLException {
         //GIVEN
         String tableToInsert = "Person6";
-        Data dataToInsert = new SqlTable(ImmutableList.of("id", "firstName", "lastName", "id"),
+        Data dataToInsert = new SqlTable(ImmutableList.of("id", "firstName", "lastName", "age"),
                 ImmutableList.of(ImmutableList.of("testId1", "testFirstName1", "testLastName1", "testAge1")
                         , ImmutableList.of("testId2", "testFirstName2", "testLastName2", "testAge2")));
         when(statement.executeBatch()).thenReturn(new int[]{1, 1});
@@ -205,13 +193,11 @@ public abstract class TestDbOperations {
         dbOperations.insert(tableToInsert, dataToInsert);
 
         //THEN
-        final String expectedFirstInsertSql = "INSERT INTO Person6(id,firstName,lastName,id) " +
-                "VALUES ( 'testId1','testFirstName1','testLastName1','testAge1' )";
-        final String expectedSecondInsertSql = "INSERT INTO Person6(id,firstName,lastName,id) " +
-                "VALUES ( 'testId2','testFirstName2','testLastName2','testAge2' )";
-        verify(statement, times(2)).addBatch(argumentCaptor.capture());
-        assertEquals(expectedFirstInsertSql, argumentCaptor.getAllValues().get(0));
-        assertEquals(expectedSecondInsertSql, argumentCaptor.getAllValues().get(1));
+        verify(statement).addBatch(eq("INSERT INTO Person6(id,firstName,lastName,age)" +
+                " VALUES ( 'testId1','testFirstName1','testLastName1','testAge1' )"));
+        verify(statement).addBatch(eq("INSERT INTO Person6(id,firstName,lastName,age)" +
+                                " VALUES ( 'testId2','testFirstName2','testLastName2','testAge2' )"));
+
     }
 
     @Test(expected = MyDbException.class)
@@ -241,11 +227,8 @@ public abstract class TestDbOperations {
         dbOperations.update(table, column, value, dataToUpdate);
 
         //THEN
-        verify(statement).addBatch(argumentCaptor.capture());
-
-        final String expectedSql = "UPDATE Person7 SET id='testId1',firstName='testFirstName1'," +
-                "lastName='testLastName1',id='testAge1' WHERE id = '7'";
-        assertEquals(expectedSql, argumentCaptor.getValue());
+        verify(statement).addBatch(eq("UPDATE Person7 SET id='testId1',firstName='testFirstName1'," +
+                "lastName='testLastName1',id='testAge1' WHERE id = '7'"));
     }
 
     @Test(expected = MyDbException.class)
@@ -260,9 +243,6 @@ public abstract class TestDbOperations {
 
         //WHEN
         dbOperations.update(table, column, value, dataToUpdate);
-
-        //THEN
-        verify(statement).addBatch(argumentCaptor.capture());
     }
 
     @Test
@@ -278,14 +258,10 @@ public abstract class TestDbOperations {
 
         //WHEN
         Data actualData = dbOperations.delete(table, column, value);
-        verify(statement).executeQuery(argumentCaptor.capture());
-        verify(statement).executeUpdate(argumentCaptor.capture());
+        verify(statement).executeQuery(eq("SELECT * FROM Person8 WHERE column = value"));
+        verify(statement).executeUpdate(eq("DELETE FROM Person8 WHERE column = value"));
 
-        //THEN
-        final String expectedSelectSql = "SELECT * FROM Person8 WHERE column = value";
-        final String expectedDeleteSql = "DELETE FROM Person8 WHERE column = value";
-        assertEquals(expectedSelectSql, argumentCaptor.getAllValues().get(0));
-        assertEquals(expectedDeleteSql, argumentCaptor.getAllValues().get(1));
+        //THEN;
         assertThat("sql results should be the same", expectedData, is(equalTo(actualData)));
     }
 

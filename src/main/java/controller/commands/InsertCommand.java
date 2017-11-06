@@ -7,7 +7,6 @@ import java.util.stream.IntStream;
 import model.Data;
 import model.DbOperations;
 import model.SqlTable;
-import view.*;
 import view.view.View;
 
 import static java.util.stream.Collectors.toList;
@@ -27,16 +26,18 @@ public class InsertCommand implements Command<String> {
 
     @Override
     public void execute(List<String> parameters) {
+        final String table = parameters.get(0);
         final List<String> columns = IntStream.range(1, parameters.size())
-                .filter(value -> value%2 != 0)
+                .filter(value -> value % 2 != 0)
                 .mapToObj(parameters::get)
                 .collect(toList());
         List<List<String>> rows = new ArrayList<>();
         rows.add(IntStream.range(1, parameters.size())
-                .filter(value -> value%2 == 0)
+                .filter(value -> value % 2 == 0)
                 .mapToObj(parameters::get)
                 .collect(toList()));
         Data data = new SqlTable(columns, rows);
-        dbOperations.insert(parameters.get(0), data);
+        dbOperations.insert(table, data);
+        view.write(String.format("new row is inserted to %s", table));
     }
 }

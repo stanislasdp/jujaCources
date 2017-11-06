@@ -7,6 +7,8 @@ import view.view.View;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.joining;
+
 /**
  * Created by stas on 10/29/17.
  */
@@ -22,9 +24,9 @@ public class GetTableColumnsCommand implements Command<String> {
     @Override
     public void execute(List<String> parameters) {
        Data data =  dbOperations.find(parameters.get(0));
-       view.write(data.getNames().stream().collect(Collectors.joining(" ")));
+       view.write(data.getNames().stream().collect(joining(" ")));
        data.getValues().forEach(row -> {
-           view.write(row.getValuesInAllColumns().stream().collect(Collectors.joining(" ")));
+           view.write(row.getValuesInAllColumns().stream().collect(joining(" ")));
        });
     }
 }
