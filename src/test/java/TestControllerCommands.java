@@ -1,5 +1,6 @@
 import com.google.common.collect.ImmutableList;
 import controller.commands.*;
+import controller.exceptions.ControllerException;
 import model.Data;
 import model.DbOperations;
 import model.SqlTable;
@@ -7,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 import view.view.View;
 import java.util.ArrayList;
@@ -168,6 +168,41 @@ public class TestControllerCommands {
                         , ImmutableList.of(ImmutableList.of("value2", "value3")))));
         verify(view).write(eq("column1 column2 column3"));
         verify(view).write(eq("value1 value2 value3"));
+    }
+
+    @Test
+    public void deleteCommandTest() {
+        //GIVEN
+        Data data = new SqlTable(ImmutableList.of("id", "value"),
+                ImmutableList.of(ImmutableList.of("1", "value1"), ImmutableList.of("2", "value2")));
+        when(dbOperations.delete("Person8", "column", "value")).thenReturn(data);
+        Command<String> command = new DeleteRowsCommand(dbOperations, view);
+
+        //WHEN
+        command.execute(ImmutableList.of("Person8", "column", "value"));
+
+        //THEN
+        verify(view).write((eq("id value")));
+        verify(view).write((eq("1 value1")));
+        verify(view).write((eq("2 value2")));
+
+    }
+
+    public void execute(List<String> parameters) {
+      /*  if (parameters.size() != ALLOWED_PARAMETERS_SIZE) {
+            throw new ControllerException("Incorect paramters size, should be table, column, value");
+        }
+        final String table = parameters.get(0);
+        final String column = parameters.get(1);
+        final String value  = parameters.get(2);
+        Data deletedData = dbOperations.delete(table, column, value);
+        view.write(deletedData.getNames().stream().collect(joining(" ")));
+        if (deletedData.getValues().isEmpty()) {
+            view.write(String.format("No value %s in table %s that is present in column %s", value, table, column));
+        } else {
+            deletedData.getValues().forEach(row -> {
+                view.write(row.getValuesInAllColumns().stream().collect(joining(" ")));
+            });*/
     }
 
     @Test

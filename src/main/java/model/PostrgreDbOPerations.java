@@ -104,7 +104,7 @@ public class PostrgreDbOPerations implements DbOperations {
                 throw new MyDbException(String.format("table %s does not exist", tableName));
             }
         } catch (SQLException e) {
-            throw new MyDbException(format("%s table caanot be dropped", tableName), e);
+            throw new MyDbException(format("%s table cannot be dropped", tableName), e);
         }
     }
 
@@ -128,18 +128,20 @@ public class PostrgreDbOPerations implements DbOperations {
 
     private Data find(Supplier<String> stringSupplier) {
         final String sql = stringSupplier.get();
-        List<String> columns;
+        List<String> columns = new ArrayList<>();
         List<List<String>> values = new ArrayList<>();
         try (Statement statement = getConnect().createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
-            columns = getColumns(resultSet);
-
+            List<String> columnsToIterate =  getColumns(resultSet);
             while (resultSet.next()) {
                 List<String> row = new ArrayList<>();
-                for (int i = 1; i <= columns.size(); i++) {
+                for (int i = 1; i <= columnsToIterate.size(); i++) {
                     row.add(resultSet.getString(i));
                 }
                 values.add(row);
+            }
+            if (!values.isEmpty()) {
+                   columns = columnsToIterate;
             }
         } catch (SQLException e) {
             throw new MyDbException("Cannot select from table rows");
@@ -209,8 +211,8 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public Data delete(String tableName, String column, String value) {
-        Data selected = find(() -> format("SELECT * FROM %s WHERE %s = %s", tableName, column, value));
-        final String deleteQuery = format("DELETE FROM %s WHERE %s = %s", tableName, column, value);
+        Data selected = find(() -> format("SELECT * FROM %s WHERE %s = '%s'", tableName, column, value));
+        final String deleteQuery = format("DELETE FROM %s WHERE %s = '%s'", tableName, column, value);
         try (Statement statement = getConnect().createStatement()) {
             statement.executeUpdate(deleteQuery);
         } catch (SQLException e) {

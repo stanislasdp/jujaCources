@@ -258,8 +258,8 @@ public abstract class TestDbOperations {
 
         //WHEN
         Data actualData = dbOperations.delete(table, column, value);
-        verify(statement).executeQuery(eq("SELECT * FROM Person8 WHERE column = value"));
-        verify(statement).executeUpdate(eq("DELETE FROM Person8 WHERE column = value"));
+        verify(statement).executeQuery(eq("SELECT * FROM Person8 WHERE column = 'value'"));
+        verify(statement).executeUpdate(eq("DELETE FROM Person8 WHERE column = 'value'"));
 
         //THEN;
         assertThat("sql results should be the same", expectedData, is(equalTo(actualData)));

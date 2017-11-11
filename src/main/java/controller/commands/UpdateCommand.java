@@ -2,17 +2,13 @@ package controller.commands;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import com.google.common.collect.ImmutableList;
-import model.Data;
+import controller.exceptions.ControllerException;
 import model.DbOperations;
 import model.SqlTable;
 import view.view.View;
 
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 
@@ -20,6 +16,8 @@ import static java.util.stream.IntStream.range;
  * Created by stas on 10/29/17.
  */
 public class UpdateCommand implements Command<String> {
+
+    private static final int MIN_ALLOWED_PARAMS_SIZE = 3;
 
     private DbOperations dbOperations;
     private View view;
@@ -29,8 +27,18 @@ public class UpdateCommand implements Command<String> {
         this.view = view;
     }
 
+
+    private void validateParams(List<String> parameters) {
+        if (parameters.size() < MIN_ALLOWED_PARAMS_SIZE) {
+            throw new ControllerException("columns are not specified in parameters");
+        } else if (parameters.subList(2 ,parameters.size()).size() %2 == 0) {
+            throw new ControllerException(" some column or value is not specified");
+        }
+    }
+
     @Override
     public void execute(List<String> parameters) {
+        validateParams(parameters);
         final String tableName = parameters.get(0);
         final String columnToUpdate = parameters.get(1);
         final String valueToUpdate = parameters.get(2);
