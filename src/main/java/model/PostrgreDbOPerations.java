@@ -1,6 +1,7 @@
 package model;
 
 
+import com.google.common.collect.ImmutableList;
 import model.exceptions.MyDbException;
 import model.utils.DbUtils;
 
@@ -8,11 +9,11 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.sql.DriverManager.getConnection;
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 
 
@@ -21,10 +22,8 @@ import static java.util.stream.Collectors.joining;
  */
 public class PostrgreDbOPerations implements DbOperations {
 
-    private Properties properties;
     private Connection connection;
     private static final String DEFAULT_PROP_RESOURCE = "postGreConnection.properties";
-
 
     @Override
     public void connect(Properties connectionProperties) {
@@ -34,32 +33,17 @@ public class PostrgreDbOPerations implements DbOperations {
             connection = getConnection(format(urlProp.getProperty("url") + "%s",
                     connectionProperties.getProperty("database")), connectionProperties);
         } catch (SQLException | IOException e) {
-            throw new MyDbException("Problems withConnection", e);
+            throw new MyDbException("Problems with Connection", e);
         }
     }
 
-    public void connect() {
-        if (properties == null) {
-            properties = new Properties();
-            try {
-                properties.load(DbUtils.getResourceAsInputStream(DEFAULT_PROP_RESOURCE));
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        try {
-            connection = getConnection(properties.getProperty("url"), properties);
-        } catch (SQLException e) {
-            throw new MyDbException("Problems with connection", e);
-        }
-
-    }
 
     @Override
     public void exit() {
         try {
-            connection.close();
+            if (Objects.nonNull(connection)) {
+                connection.close();
+            }
         } catch (SQLException e) {
             throw new MyDbException("Connection cannot be closed", e);
         }
@@ -87,8 +71,8 @@ public class PostrgreDbOPerations implements DbOperations {
     @Override
     public void clearTable(String tableName) {
         try (Statement statement = getConnect().createStatement()) {
-            boolean isNotEmpty = statement.execute("DELETE FROM " + tableName);
-            if (!isNotEmpty) {
+            boolean isEmpty = statement.execute("DELETE FROM " + tableName);
+            if (isEmpty) {
                 throw new MyDbException(String.format("table %s is already empty or not exist", tableName));
             }
         } catch (SQLException e) {
@@ -99,8 +83,8 @@ public class PostrgreDbOPerations implements DbOperations {
     @Override
     public void dropTable(String tableName) {
         try (Statement statement = getConnect().createStatement()) {
-            boolean isTableExists = statement.execute("DROP TABLE " + tableName);
-            if (!isTableExists) {
+            boolean isTableNotExists = statement.execute("DROP TABLE " + tableName);
+            if (isTableNotExists) {
                 throw new MyDbException(String.format("table %s does not exist", tableName));
             }
         } catch (SQLException e) {
@@ -123,7 +107,8 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public Data find(String tableName) {
-        return find(() -> "SELECT * FROM " + tableName);
+        return isTableExists(tableName) ? find(() -> "SELECT * FROM " + tableName)
+                : new SqlTable(emptyList(), emptyList());
     }
 
     private Data find(Supplier<String> stringSupplier) {
@@ -132,7 +117,7 @@ public class PostrgreDbOPerations implements DbOperations {
         List<List<String>> values = new ArrayList<>();
         try (Statement statement = getConnect().createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
-            List<String> columnsToIterate =  getColumns(resultSet);
+            List<String> columnsToIterate = getColumns(resultSet);
             while (resultSet.next()) {
                 List<String> row = new ArrayList<>();
                 for (int i = 1; i <= columnsToIterate.size(); i++) {
@@ -141,7 +126,7 @@ public class PostrgreDbOPerations implements DbOperations {
                 values.add(row);
             }
             if (!values.isEmpty()) {
-                   columns = columnsToIterate;
+                columns = columnsToIterate;
             }
         } catch (SQLException e) {
             throw new MyDbException("Cannot select from table rows");
@@ -167,7 +152,9 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public void insert(String tableName, Data data) {
-
+        if (!isTableExists(tableName)) {
+            throw new MyDbException("Table does not exist");
+        }
         final String sqlTemplateString = "INSERT INTO " + tableName + "(" + data.getNames().stream().collect(joining(",")) + ")" +
                 " VALUES ( %s )";
         try (Statement statement = getConnect().createStatement()) {
@@ -186,6 +173,9 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public void update(String tableName, String column, String value, Data data) {
+        if (!isTableExists(tableName)) {
+            throw new MyDbException("Table does not exist");
+        }
         StringBuilder stringBuilder = new StringBuilder();
         for (String col : data.getNames()) {
             stringBuilder.append(col).append("='%s',");
@@ -211,12 +201,15 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public Data delete(String tableName, String column, String value) {
+        if (!isTableExists(tableName)) {
+            throw new MyDbException("Table does not exist");
+        }
         Data selected = find(() -> format("SELECT * FROM %s WHERE %s = '%s'", tableName, column, value));
         final String deleteQuery = format("DELETE FROM %s WHERE %s = '%s'", tableName, column, value);
         try (Statement statement = getConnect().createStatement()) {
             statement.executeUpdate(deleteQuery);
         } catch (SQLException e) {
-            throw new MyDbException("Cannot delete from  DB", e);
+            throw new MyDbException("Cannot delete from DB", e);
         }
         return selected;
 
@@ -227,6 +220,18 @@ public class PostrgreDbOPerations implements DbOperations {
             throw new RuntimeException("Connection must be  initialized");
         }
         return connection;
+    }
+
+    private boolean isTableExists(String tableName)  {
+        try {
+            return getConnect()
+                    .getMetaData()
+                    .getTables(null, null, tableName.toLowerCase(),
+                            new String[]{"TABLE"}).next();
+        } catch (SQLException e) {
+            throw new MyDbException("error has been occured", e);
+        }
+
     }
 
 

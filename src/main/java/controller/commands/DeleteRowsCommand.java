@@ -26,7 +26,7 @@ public class DeleteRowsCommand implements Command<String> {
     @Override
     public void execute(List<String> parameters) {
         if (parameters.size() != ALLOWED_PARAMETERS_SIZE) {
-            throw new ControllerException("Incorect paramters size, should be table, column, value");
+            throw new ControllerException("Incorect parameters size, should be table, column, value");
         }
         final String table = parameters.get(0);
         final String column = parameters.get(1);

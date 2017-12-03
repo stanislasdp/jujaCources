@@ -30,6 +30,10 @@ public class GetTableColumnsCommand implements Command<String> {
             throw new ControllerException("Incorrect parameters size, should be only tableName");
         }
        Data data =  dbOperations.find(parameters.get(0));
+        if (data.getValues().isEmpty()) {
+            view.write("This table is empty");
+            return;
+        }
        view.write(data.getNames().stream().collect(joining(" ")));
        data.getValues().forEach(row -> {
            view.write(row.getValuesInAllColumns().stream().collect(joining(" ")));

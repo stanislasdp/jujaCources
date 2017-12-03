@@ -22,6 +22,6 @@ public class ExitCommand implements Command<String> {
     @Override
     public void execute(List<String> parameters) {
         dbOperations.exit();
-        view.write("Connection to db has been closed");
+        view.write("Connection to db has been closed, now exit");
     }
 }

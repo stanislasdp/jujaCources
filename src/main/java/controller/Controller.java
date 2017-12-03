@@ -39,7 +39,7 @@ public class Controller {
         commandMap.put("exit", new ExitCommand(dbOperations, view));
         commandMap.put("insert", new InsertCommand(dbOperations, view));
         commandMap.put("update", new UpdateCommand(dbOperations, view));
-        commandMap.put("delete" , new DeleteRowsCommand(dbOperations ,view));
+        commandMap.put("delete", new DeleteRowsCommand(dbOperations, view));
         commandMap.put("find", new GetTableColumnsCommand(dbOperations, view));
     }
 
@@ -51,48 +51,47 @@ public class Controller {
             view.write("Enter the command or type help");
             String[] inputArray = view.read().split("\\|");
             String commandString = inputArray[0].trim();
-            Optional<Command> command = Optional.ofNullable(commandMap.get(commandString));
-
-            if (!command.isPresent()) {
+            Optional<Command> commandOpt = Optional.ofNullable(commandMap.get(commandString));
+            List<String> parameters = getParamWithStrippedCommand(inputArray);
+            if (!commandOpt.isPresent()) {
                 view.write("Invalid command");
                 continue;
             }
-
-            if ((!"connect".equals(commandString) && !isDbConnected) && !"help".equals(commandString))  {
-                view.write("Connection to DB must be initialized first");
-                continue;
-            } else {
-                isDbConnected = true;
-            }
-
-            List<String> parameters = getParamWithStrippedCommand(inputArray);
+            Command command = commandOpt.get();
             try {
-            command.get().execute(parameters);
+                if ("connect".equals(commandString) && !isDbConnected) {
+                        command.execute(parameters);
+                        isDbConnected = true;
+                        continue;
+                }
+                if (!isDbConnected && !"exit".equals(commandString)) {
+                    view.write("Connection to DB must be initialized first");
+                    continue;
+                } else if ("exit".equals(commandString)) {
+                    command.execute(parameters);
+                    break;
+                }
 
+                command.execute(parameters);
             } catch (MyDbException | ControllerException e) {
                 printException(e);
-                continue;
-            }
-            if (commandString.contains("exit")) {
-                break;
             }
         }
+
     }
 
     private void printException(Exception e) {
-        view.write("Error has been occured: " + e.getMessage());
+        view.write("Error has been occurred: " + e.getMessage());
         if (!Objects.isNull(e.getCause())) {
-        view.write(e.getCause().getMessage());
+            view.write(e.getCause().getMessage());
         }
         view.write("Please try again one more time");
     }
 
 
-
     private List<String> getParamWithStrippedCommand(String[] inputArray) {
         return Stream.of(inputArray).skip(1).map(String::trim).collect(toList());
     }
-
 
 
 }

@@ -1,9 +1,9 @@
 package controller.commands;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import model.DbOperations;
-import view.*;
 import view.view.View;
 
 import static java.util.stream.Collectors.joining;
@@ -23,6 +23,8 @@ public class GetTablesCommand implements Command<String> {
 
     @Override
     public void execute(List<String> parameters) {
-        view.write(dbOperations.getTables().stream().collect(joining(", ")));
+        List <String> tables = dbOperations.getTables();
+        view.write(!tables.isEmpty() ? tables.stream().collect(joining(", "))
+                : "No tables present in selected DB");
     }
 }
