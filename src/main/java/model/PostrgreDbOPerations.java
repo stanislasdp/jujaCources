@@ -1,7 +1,5 @@
 package model;
 
-
-import com.google.common.collect.ImmutableList;
 import model.exceptions.MyDbException;
 import model.utils.DbUtils;
 
@@ -82,11 +80,11 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public void dropTable(String tableName) {
+        if(!isTableExists(tableName)) {
+            throw new MyDbException("Table does not exist");
+        }
         try (Statement statement = getConnect().createStatement()) {
-            boolean isTableNotExists = statement.execute("DROP TABLE " + tableName);
-            if (isTableNotExists) {
-                throw new MyDbException(String.format("table %s does not exist", tableName));
-            }
+            statement.execute("DROP TABLE " + tableName);
         } catch (SQLException e) {
             throw new MyDbException(format("%s table cannot be dropped", tableName), e);
         }
@@ -176,13 +174,8 @@ public class PostrgreDbOPerations implements DbOperations {
         if (!isTableExists(tableName)) {
             throw new MyDbException("Table does not exist");
         }
-        StringBuilder stringBuilder = new StringBuilder();
-        for (String col : data.getNames()) {
-            stringBuilder.append(col).append("='%s',");
-        }
-        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-
-        final String sqlTemplate = "UPDATE " + tableName + " SET " + stringBuilder.toString() +
+        final String valuesToUpdate = data.getNames().stream().collect(joining("='%s',", "", "='%s'"));
+        final String sqlTemplate = "UPDATE " + tableName + " SET " + valuesToUpdate +
                 " WHERE " + column + " = " + "'" + value + "'";
 
         try (Statement statement = getConnect().createStatement()) {
@@ -190,8 +183,10 @@ public class PostrgreDbOPerations implements DbOperations {
                 statement.addBatch(format(sqlTemplate, row.getValuesInAllColumns().toArray()));
             }
             int[] result = statement.executeBatch();
-            if (!stream(result).allMatch(val -> val == 1)) {
-                throw new MyDbException("Some columns may not be updated");
+            if (stream(result).noneMatch(val -> val == 1)) {
+                throw new MyDbException("No columns has been updated");
+            } else if (!stream(result).allMatch(val -> val == 1)) {
+                throw new MyDbException("Some columns has not been updated");
             }
 
         } catch (SQLException e) {
@@ -222,7 +217,7 @@ public class PostrgreDbOPerations implements DbOperations {
         return connection;
     }
 
-    private boolean isTableExists(String tableName)  {
+    private boolean isTableExists(String tableName) {
         try {
             return getConnect()
                     .getMetaData()

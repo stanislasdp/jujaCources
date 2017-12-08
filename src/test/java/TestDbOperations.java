@@ -12,16 +12,12 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-
 import java.sql.*;
 import java.util.List;
 
-import static java.sql.DriverManager.getConnection;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -99,6 +95,7 @@ public abstract class TestDbOperations {
         //GIVEN
         final String tableToDrop = "Person3";
         when(statement.execute(anyString())).thenReturn(false);
+        makeTableExists(tableToDrop, true);
 
         //WHEN
         dbOperations.dropTable(tableToDrop);
@@ -246,12 +243,15 @@ public abstract class TestDbOperations {
         Data dataToUpdate = new SqlTable(ImmutableList.of("id", "firstName", "lastName", "id"),
                 ImmutableList.of(ImmutableList.of("testId1", "testFirstName1", "testLastName1", "testAge1")));
         makeTableExists(tableToUpdate, true);
-        when(statement.executeBatch()).thenReturn(new int[]{0});
+        when(statement.executeBatch()).thenReturn(new int[]{0}).thenReturn(new int[]{0, 1});
         expectedEx.expect(MyDbException.class);
-        expectedEx.expectMessage("Some columns may not be updated");
+        expectedEx.expectMessage("No columns has been updated");
 
         //WHEN
         dbOperations.update(tableToUpdate, column, value, dataToUpdate);
+        expectedEx.expectMessage("Some columns has not been updated");
+        dbOperations.update(tableToUpdate, column, value, dataToUpdate);
+
     }
 
     @Test
