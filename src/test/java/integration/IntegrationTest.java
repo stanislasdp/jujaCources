@@ -1,30 +1,27 @@
 package integration;
 
-import com.google.common.collect.ImmutableList;
-import main.Main;
-import model.DbOperations;
-import model.PostrgreDbOPerations;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
+import model.utils.DbUtils;
 import org.junit.*;
-
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.regex.Matcher;
+import java.io.*;
+import java.util.Properties;
 
 import static main.Main.main;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.stringContainsInOrder;
-import static org.junit.Assert.assertEquals;
 
 public class IntegrationTest {
 
+    private static final String DEFAULT_PROP_RESOURCE = "postGreConnection.properties";
+    private static Properties dbProperties = new Properties();
+
     private static ConfigurableInputStream configurableInputStream;
     private static ByteArrayOutputStream byteArrayOutputStream;
+
+    @BeforeClass
+    public static void initProperties() throws IOException {
+        dbProperties.load(DbUtils.getResourceAsInputStream(DEFAULT_PROP_RESOURCE));
+    }
 
     @BeforeClass
     public static void initStreams() {
@@ -44,7 +41,10 @@ public class IntegrationTest {
     @Test
     public void connectAndExitTest() {
         configurableInputStream
-                .add("connect|Testing|java|111111")
+                .add(String.format("connect|%s|%s|%s",
+                        dbProperties.getProperty("database"),
+                        dbProperties.getProperty("user"),
+                        dbProperties.getProperty("password")))
                 .add("exit\n");
         start();
         assertThat(getOutPutStreamAsString(), allOf(
@@ -56,7 +56,9 @@ public class IntegrationTest {
     @Test
     public void invalidConnectionTest() {
         configurableInputStream
-                .add("connect|NotExists|java|111111")
+                .add(String.format("connect|NotExists|%s|%s",
+                        dbProperties.getProperty("user"),
+                        dbProperties.getProperty("password")))
                 .add("exit\n");
         start();
         assertThat(getOutPutStreamAsString(), allOf(
@@ -81,7 +83,10 @@ public class IntegrationTest {
     @Test
     public void tableWorkflowTest() {
         configurableInputStream
-                .add("connect | Testing | java |111111")
+                .add(String.format("connect | %s | %s | %s",
+                        dbProperties.getProperty("database"),
+                        dbProperties.getProperty("user"),
+                        dbProperties.getProperty("password")))
                 .add("create | Person5| id | fname | lname| age")
                 .add("tables")
                 .add("insert | Person5 | id | 1 |fname | testFname | lname | testLname | age |18")
@@ -121,5 +126,4 @@ public class IntegrationTest {
             throw new RuntimeException(e);
         }
     }
-
 }

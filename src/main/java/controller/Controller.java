@@ -1,5 +1,6 @@
 package controller;
 
+import com.google.common.collect.ImmutableMap;
 import controller.commands.*;
 import controller.exceptions.ControllerException;
 import model.DbOperations;
@@ -29,18 +30,19 @@ public class Controller {
     }
 
     private void initCommands() {
-        commandMap = new HashMap<>();
-        commandMap.put("connect", new ConnectCommand(dbOperations, view));
-        commandMap.put("tables", new GetTablesCommand(dbOperations, view));
-        commandMap.put("clear", new ClearTableCommand(dbOperations, view));
-        commandMap.put("drop", new DropTableCommand(dbOperations, view));
-        commandMap.put("create", new CreateTableCommand(dbOperations, view));
-        commandMap.put("help", new HelpCommand(view));
-        commandMap.put("exit", new ExitCommand(dbOperations, view));
-        commandMap.put("insert", new InsertCommand(dbOperations, view));
-        commandMap.put("update", new UpdateCommand(dbOperations, view));
-        commandMap.put("delete", new DeleteRowsCommand(dbOperations, view));
-        commandMap.put("find", new GetTableColumnsCommand(dbOperations, view));
+        commandMap = new ImmutableMap.Builder<String, Command>()
+                .put("connect", new ConnectCommand(dbOperations, view))
+                .put("tables", new GetTablesCommand(dbOperations, view))
+                .put("clear", new ClearTableCommand(dbOperations, view))
+                .put("drop", new DropTableCommand(dbOperations, view))
+                .put("create", new CreateTableCommand(dbOperations, view))
+                .put("help", new HelpCommand(view))
+                .put("exit", new ExitCommand(dbOperations, view))
+                .put("insert", new InsertCommand(dbOperations, view))
+                .put("update", new UpdateCommand(dbOperations, view))
+                .put("delete", new DeleteRowsCommand(dbOperations, view))
+                .put("find", new GetTableColumnsCommand(dbOperations, view))
+                .build();
     }
 
 
@@ -59,19 +61,22 @@ public class Controller {
             }
             Command command = commandOpt.get();
             try {
-                if ("connect".equals(commandString) && !isDbConnected) {
+                if ("connect".equalsIgnoreCase(commandString)) {
                         command.execute(parameters);
                         isDbConnected = true;
                         continue;
-                }
-                if (!isDbConnected && !"exit".equals(commandString)) {
-                    view.write("Connection to DB must be initialized first");
+                } else if ("help".equalsIgnoreCase(commandString)) {
+                    command.execute(parameters);
                     continue;
-                } else if ("exit".equals(commandString)) {
+                } else if ("exit".equalsIgnoreCase(commandString)) {
                     command.execute(parameters);
                     break;
                 }
 
+                if (!isDbConnected) {
+                    view.write("Connection to DB must be initialized first");
+                    continue;
+                }
                 command.execute(parameters);
             } catch (MyDbException | ControllerException e) {
                 printException(e);
@@ -92,6 +97,4 @@ public class Controller {
     private List<String> getParamWithStrippedCommand(String[] inputArray) {
         return Stream.of(inputArray).skip(1).map(String::trim).collect(toList());
     }
-
-
 }
