@@ -1,6 +1,5 @@
 import model.DbOperations;
 import model.PostrgreDbOPerations;
-
 import org.junit.Before;
 
 import static org.powermock.reflect.Whitebox.setInternalState;

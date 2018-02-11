@@ -1,5 +1,3 @@
-
-
 import com.google.common.collect.ImmutableList;
 import model.*;
 import model.exceptions.MyDbException;
@@ -12,6 +10,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
+
 import java.sql.*;
 import java.util.List;
 
@@ -19,6 +18,7 @@ import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
 
 

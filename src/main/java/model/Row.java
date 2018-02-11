@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -8,16 +9,12 @@ import java.util.Objects;
  */
 public class Row {
 
-    private SqlTable table;
+    private Data table;
     private List<String> data;
 
-    public Row(SqlTable table, List<String> data) {
+    public Row(Data table, List<String> data) {
         this.table = table;
         this.data = data;
-    }
-
-    public int getRowNumber() {
-          return table.getValues().indexOf(this);
     }
 
     public String getValueInColumn(int columnIndex) {
@@ -26,10 +23,6 @@ public class Row {
 
     public List<String> getValuesInAllColumns() {
         return data;
-    }
-
-    public List<String> getColumnsNames() {
-        return table.getNames();
     }
 
     @Override

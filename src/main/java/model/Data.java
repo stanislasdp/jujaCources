@@ -1,8 +1,7 @@
 package model;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Created by stas on 10/19/17.

@@ -2,10 +2,18 @@ package model;
 
 import model.exceptions.MyDbException;
 import model.utils.DbUtils;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
@@ -18,13 +26,15 @@ import static java.util.stream.Collectors.joining;
 /**
  * Created by stas on 10/16/17.
  */
+@Component
+@Scope("prototype")
 public class PostrgreDbOPerations implements DbOperations {
 
     private Connection connection;
     private static final String DEFAULT_PROP_RESOURCE = "postGreConnection.properties";
 
     @Override
-    public void connect(Properties connectionProperties) {
+    public DbOperations connect(Properties connectionProperties) {
         try {
             Properties urlProp = new Properties();
             urlProp.load(DbUtils.getResourceAsInputStream(DEFAULT_PROP_RESOURCE));
@@ -33,6 +43,7 @@ public class PostrgreDbOPerations implements DbOperations {
         } catch (SQLException | IOException e) {
             throw new MyDbException("Problems with Connection", e);
         }
+        return this;
     }
 
 
@@ -80,7 +91,7 @@ public class PostrgreDbOPerations implements DbOperations {
 
     @Override
     public void dropTable(String tableName) {
-        if(!isTableExists(tableName)) {
+        if (!isTableExists(tableName)) {
             throw new MyDbException("Table does not exist");
         }
         try (Statement statement = getConnect().createStatement()) {
@@ -111,20 +122,17 @@ public class PostrgreDbOPerations implements DbOperations {
 
     private Data find(Supplier<String> stringSupplier) {
         final String sql = stringSupplier.get();
-        List<String> columns = new ArrayList<>();
+        List<String> columns;
         List<List<String>> values = new ArrayList<>();
         try (Statement statement = getConnect().createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
-            List<String> columnsToIterate = getColumns(resultSet);
+            columns = getColumns(resultSet);
             while (resultSet.next()) {
                 List<String> row = new ArrayList<>();
-                for (int i = 1; i <= columnsToIterate.size(); i++) {
+                for (int i = 1; i <= columns.size(); i++) {
                     row.add(resultSet.getString(i));
                 }
                 values.add(row);
-            }
-            if (!values.isEmpty()) {
-                columns = columnsToIterate;
             }
         } catch (SQLException e) {
             throw new MyDbException("Cannot select from table rows");
