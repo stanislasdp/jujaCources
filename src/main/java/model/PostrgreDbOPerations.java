@@ -2,6 +2,7 @@ package model;
 
 import model.exceptions.MyDbException;
 import model.utils.DbUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -229,7 +230,8 @@ public class PostrgreDbOPerations implements DbOperations {
         try {
             return getConnect()
                     .getMetaData()
-                    .getTables(null, null, tableName.toLowerCase(),
+                    .getTables(null, null,
+                            StringUtils.removeStart(tableName.toLowerCase(), "public."),
                             new String[]{"TABLE"}).next();
         } catch (SQLException e) {
             throw new MyDbException("error has been occured", e);

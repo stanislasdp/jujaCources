@@ -7,7 +7,7 @@ public interface Action {
 
     void doGet(HttpServletRequest req, HttpServletResponse resp);
 
-    void doPost(HttpServletRequest req, HttpServletResponse resp);
+    void doPost(HttpServletRequest req,HttpServletResponse resp);
 
     boolean canProcess(String req);
 
