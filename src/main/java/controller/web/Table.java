@@ -13,5 +13,6 @@ public class Table {
 
     private List<String> columns;
 
+    private List<String> row;
 
 }

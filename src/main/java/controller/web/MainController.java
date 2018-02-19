@@ -47,15 +47,15 @@ public class MainController {
         }
         model.addAttribute("table", new Table());
         model.addAttribute("toUrl", "createTable");
-        return "getTableDataForCreate";
+        return "getTableData";
     }
 
-    @RequestMapping(path = "/createTable", method = RequestMethod.POST)
+    @RequestMapping(path = "/dataToCreate", method = RequestMethod.POST)
     public String createTableWithColumnsNames(@ModelAttribute("table") Table table) {
         return "createTable";
     }
 
-    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequestMapping(path = "/createTable", method = RequestMethod.POST)
     public String createTable(@ModelAttribute("table") Table table,
                               @ModelAttribute("db_operations") DbOperations dbOperations) {
         service.createTable(table.getName(), table.getColumns(), dbOperations);
@@ -84,6 +84,20 @@ public class MainController {
         return "tableData";
     }
 
+    @RequestMapping(path = "/insertToTable/{table:.+}")
+    public String getTableToInsert(Model model,
+                                   @PathVariable("table") String tableToInsert,
+                                   @ModelAttribute("db_operations") DbOperations dbOperations) {
+        if (dbOperations == null) {
+            return "redirect:/connect";
+        }
+        Table table = new Table();
+        table.setName(tableToInsert);
+        table.setColumns(service.getTable(tableToInsert, dbOperations).iterator().next());
+        model.addAttribute("table", table);
+
+        return "insertRow";
+    }
 
 
 }
