@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Deprecated
 public class UpdateAction extends AbstractAction {
 
     private Service service;

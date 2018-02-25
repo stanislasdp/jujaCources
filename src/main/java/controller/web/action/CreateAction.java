@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Deprecated
 public class CreateAction extends AbstractAction {
 
     private Service service;

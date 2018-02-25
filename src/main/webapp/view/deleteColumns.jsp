@@ -1,28 +1,31 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="spring" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
     <title>Title</title>
 </head>
 <body>
-<form action="deleteColumns" method="post">
-<input type="hidden" name="tableName" value="${tableName}">
-    <h1>${tableName}</h1>
+<spring:url value="/deleteRowsFromTable/${table.name}" var="url"/>
+<form:form action="${url}" method="post" modelAttribute="table">
+    <h1>${table.name}</h1>
     <table>
-        <c:forEach items="${columnNames}" var="column">
+        <c:forEach items="${table.columns}" var="column" varStatus="el">
             <tr>
                 <td>${column}</td>
                 <td>
-                <input type="checkbox" name="${column}_checkbox" value="${column}_checkbox">Column<br>
+                    <form:input path="columns[${el.index}]" value="${table.columns[el.index]}"/>
                 </td>
                 <td>
-                <input type="text" name="${column}">
+                    <form:input name="${column}" path="row[${el.index}]"/>
                 </td>
             </tr>
         </c:forEach>
+        <form:checkboxes path="selectedColumn" items="${table.columns}"/>
     </table>
-    <input type="submit" name="Update">
-</form>
+    <input type="submit">
+</form:form>
 <%@include file="footer.jsp"%>
 </body>
 </html>

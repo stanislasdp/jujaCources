@@ -1,4 +1,4 @@
-package controller.web;
+package controller.web.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

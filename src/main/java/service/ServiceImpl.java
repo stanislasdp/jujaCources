@@ -17,7 +17,7 @@ public class ServiceImpl implements Service {
     private DbOperations dbOperations;
 
     @Lookup
-    public DbOperations getDbOperations() {
+    private DbOperations getDbOperations() {
         return dbOperations;
     }
 
@@ -32,9 +32,7 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<String> getCommandList() {
-        return ImmutableList.of("menu", "connect", "createTable",
-                "getTables", "getTableByName", "insertToTable",
-                "updateTable", "deleteFromTable", "dropTable");
+        return ImmutableList.of("menu", "createTable", "getTables");
     }
 
     @Override

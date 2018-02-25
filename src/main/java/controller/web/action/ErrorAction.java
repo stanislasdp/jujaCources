@@ -5,6 +5,7 @@ import service.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@Deprecated
 public class ErrorAction extends AbstractAction {
 
     private Service service;

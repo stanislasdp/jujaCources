@@ -8,8 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Objects;
 
-
-
+@Deprecated
 public abstract class AbstractAction implements Action {
 
     protected void forwardToJsp(String fileName, HttpServletRequest request,

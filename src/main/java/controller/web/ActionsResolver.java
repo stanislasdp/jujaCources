@@ -16,6 +16,7 @@ import java.util.Set;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+@Deprecated
 @Component
 public class ActionsResolver {
 

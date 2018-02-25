@@ -1,10 +1,10 @@
-<%@ page language="java" %>
+<%@ page %>
 <html>
 <head>
     <title>Title</title>
 </head>
 <body>
-<spring:url value="/menu" var="fromUrl"/>
-<a href="${fromUrl}">Menu</a>
+<spring:url value="/menu" var="url"/>
+<a href="${url}">Menu</a>
 </body>
 </html>

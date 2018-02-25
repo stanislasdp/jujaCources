@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
+@Deprecated
 public class GetTableDataAction extends AbstractAction {
 
     private Service service;

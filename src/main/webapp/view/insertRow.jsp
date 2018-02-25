@@ -3,22 +3,23 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <html>
 <head>
-    <title>Title</title>
+    <title>Title3</title>
 </head>
 <body>
-<form:form action="insertRow" method="post" modelAttribute="table">
-    <h1>${table.name}</h1>
+<spring:url value="/insertRowToTable" var="url"/>
+<form:form action="${url}/${table.name}" method="post" modelAttribute="table">
     <table>
-        <c:forEach begin="1" end="${table.columnsAmount}" varStatus="el">
+        <h
+        <c:forEach items="${table.columns}" var="column" varStatus="el">
             <tr>
-                <td>${column}</td>
+                <td><form:input path="columns[${el.index}]" value="${table.columns[el.index]}"/></td>
                 <td>
-                    <form:input type="text" name="${column}" path="row[${el.index -1}]"/>
+                    <form:input type="text" name="${column}" path="row[${el.index}]"/>
                 </td>
             </tr>
         </c:forEach>
     </table>
-    <input type="submit" name="Insert">
+    <input type="submit">
 </form:form>
 <%@include file="footer.jsp"%>
 </body>

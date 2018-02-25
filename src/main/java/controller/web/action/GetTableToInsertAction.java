@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Collections;
 import java.util.List;
 
+@Deprecated
 public class GetTableToInsertAction extends AbstractAction {
 
     private Service service;

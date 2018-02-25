@@ -51,10 +51,7 @@ public class ServiceTest {
     @Test
     public void commandListTest() {
         assertThat(service.getCommandList(),
-                hasItems("menu", "connect", "createTable",
-                        "getTables", "getTableByName", "insertToTable",
-                        "updateTable", "deleteFromTable", "dropTable"));
-
+                hasItems("menu", "createTable", "getTables"));
     }
 
     @Test

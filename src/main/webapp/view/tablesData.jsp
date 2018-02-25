@@ -1,6 +1,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8"%>
 <html>
 <head>
     <title>Title</title>
@@ -13,6 +13,12 @@
             <td><a href="${tableUrl}">${table}</a></td>
             <spring:url value="/insertToTable/${table}" var="insertUrl"/>
             <td><input type="button" onclick="location.href='${insertUrl}'">Insert</td>
+            <spring:url value="/updateTable/${table}" var="updateUrl"/>
+            <td><input type="button" onclick="location.href='${updateUrl}'">Update</td>
+            <spring:url value="/deleteFromTable/${table}" var="deleteUrl"/>
+            <td><input type="button" onclick="location.href='${deleteUrl}'">Delete</td>
+            <spring:url value="/dropTable/${table}" var="dropUrl"/>
+            <td><input type="button" onclick="location.href='${dropUrl}'">Drop</td>
         </tr>
     </c:forEach>
 </table>

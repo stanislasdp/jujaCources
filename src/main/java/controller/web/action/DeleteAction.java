@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Deprecated
 public class DeleteAction extends AbstractAction {
 
     private Service service;
@@ -37,8 +38,7 @@ public class DeleteAction extends AbstractAction {
     }
 
     private void doDelete(HttpServletRequest req) {
-        Map<String, String[]> parameterMap = new LinkedHashMap<>();
-        parameterMap.putAll(req.getParameterMap());
+        Map<String, String[]> parameterMap = new LinkedHashMap<>(req.getParameterMap());
         String column = null;
         for (Iterator<Map.Entry<String, String[]>> it = parameterMap.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<String, String[]> entry = it.next();

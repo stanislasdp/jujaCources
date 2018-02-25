@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Deprecated
 public class InsertAction extends AbstractAction {
 
     private Service service;
