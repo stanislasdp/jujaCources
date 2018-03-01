@@ -1,6 +1,7 @@
 import model.DbOperations;
 import model.PostrgreDbOPerations;
 import org.junit.Before;
+import org.junit.Ignore;
 
 import static org.powermock.reflect.Whitebox.setInternalState;
 
@@ -8,6 +9,7 @@ import static org.powermock.reflect.Whitebox.setInternalState;
 /**
  * Created by stas on 10/29/17.
  */
+@Ignore
 public class TestPostgresDbOperations extends TestDbOperations {
 
     @Before

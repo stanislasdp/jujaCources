@@ -1,10 +1,7 @@
 import com.google.common.collect.ImmutableList;
 import model.*;
 import model.exceptions.MyDbException;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +22,7 @@ import static org.mockito.Mockito.*;
 /**
  * Created by stas on 10/29/17.
  */
+@Ignore
 @RunWith(PowerMockRunner.class)
 public abstract class TestDbOperations {
     protected static DbOperations dbOperations;
