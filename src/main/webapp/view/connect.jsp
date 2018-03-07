@@ -12,15 +12,23 @@
             <table>
                 <tr>
                     <td>Database3 name</td>
-                    <td><form:input path="database" id="dbname" /></td>
+                    <td>
+                    <form:input path="database" id="dbname" />
+                    <form:errors path = "database"/>
+                    </td>
                 </tr>
                 <tr>
                     <td>User name</td>
-                    <td><form:input path="user" id="username"/></td>
+                    <td>
+                    <form:input path="user" id="username"/>
+                    <form:errors path="user"/>
+                    </td>
                 </tr>
                 <tr>
                     <td>Password</td>
-                    <td><form:input path="password" id="password"/></td>
+                    <td>
+                    <form:password path="password" id="password"/>
+                    </td>
                 </tr>
                 <tr>
                     <td></td>

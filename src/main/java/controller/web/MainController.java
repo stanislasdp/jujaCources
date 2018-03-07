@@ -5,11 +5,15 @@ import controller.web.entity.Table;
 import model.DbOperations;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import service.Service;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +33,7 @@ public class MainController {
 
     @RequestMapping(path = "/menu", method = RequestMethod.GET)
     public String menu(Model model) {
-        if(!model.asMap().containsKey("db_operations")) {
+        if (!model.asMap().containsKey("db_operations")) {
             return "redirect:/connect";
         }
         model.addAttribute("items", service.getCommandList());
@@ -43,9 +47,12 @@ public class MainController {
     }
 
     @RequestMapping(path = "/connect", method = RequestMethod.POST)
-    public String connecting(@ModelAttribute("connect") Connect connect, Model model) {
+    public String connecting(@Valid @ModelAttribute("connect") Connect connect, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            return "connect";
+        }
         DbOperations dbOperations = service.connect(connect.getDatabase(),
-                connect.getUser(), connect.getPassword());
+            connect.getUser(), connect.getPassword());
         model.addAttribute("db_operations", dbOperations);
         return "redirect:/menu";
     }
@@ -61,7 +68,10 @@ public class MainController {
     }
 
     @RequestMapping(path = "/dataToCreate", method = RequestMethod.POST)
-    public String createTableWithColumnsNames(@ModelAttribute("table") Table table) {
+    public String createTableWithColumnsNames(@Valid @ModelAttribute("table") Table table, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "getTableData";
+        }
         return "createTable";
     }
 
@@ -96,9 +106,9 @@ public class MainController {
             return "redirect:/connect";
         }
         Table table = Table.builder()
-                .name(tableToInsert)
-                .columns(service.getTable(tableToInsert, dbOperations).iterator().next())
-                .build();
+            .name(tableToInsert)
+            .columns(service.getTable(tableToInsert, dbOperations).iterator().next())
+            .build();
         model.addAttribute(table);
         return "insertRow";
     }
@@ -111,8 +121,8 @@ public class MainController {
             return "redirect:connect";
         }
         Map<String, String> insertData = range(0, table.getColumns().size())
-                .boxed()
-                .collect(toMap(i -> table.getColumns().get(i), i -> table.getRow().get(i)));
+            .boxed()
+            .collect(toMap(i -> table.getColumns().get(i), i -> table.getRow().get(i)));
         service.insertRow(tableName, insertData, dbOperations);
         return "redirect:/menu";
     }
@@ -124,9 +134,9 @@ public class MainController {
             return "redirect:/connect";
         }
         Table table = Table.builder()
-                .name(tableToUpdate)
-                .columns(service.getTable(tableToUpdate, dbOperations).iterator().next())
-                .build();
+            .name(tableToUpdate)
+            .columns(service.getTable(tableToUpdate, dbOperations).iterator().next())
+            .build();
         model.addAttribute("table", table);
         return "updateColumns";
     }
@@ -142,10 +152,10 @@ public class MainController {
         String selectedColumn = table.getSelectedColumn();
         int updateColumnIndex = table.getColumns().indexOf(selectedColumn);
         Map<String, String> updateData = range(0, table.getColumns().size())
-                .boxed()
-                .collect(toMap(i -> table.getColumns().get(i), i -> table.getRow().get(i)));
+            .boxed()
+            .collect(toMap(i -> table.getColumns().get(i), i -> table.getRow().get(i)));
         service.updateRows(tableName, Pair.of(selectedColumn,
-                table.getRow().get(updateColumnIndex)), updateData, dbOperations);
+            table.getRow().get(updateColumnIndex)), updateData, dbOperations);
         return "redirect:/menu";
     }
 
@@ -157,9 +167,9 @@ public class MainController {
             return "redirect:/connect";
         }
         Table table = Table.builder()
-                .name(tableToDelete)
-                .columns(service.getTable(tableToDelete, dbOperations).iterator().next())
-                .build();
+            .name(tableToDelete)
+            .columns(service.getTable(tableToDelete, dbOperations).iterator().next())
+            .build();
         model.addAttribute(table);
         return "deleteColumns";
     }
@@ -188,5 +198,11 @@ public class MainController {
         return "redirect:/menu";
     }
 
+    @InitBinder
+    public void initBinder(WebDataBinder dataBinder) {
+        /*dela with the case when only space is entered to text fields > null*/
+        StringTrimmerEditor stringTrimmerEditor = new StringTrimmerEditor(true);
+        dataBinder.registerCustomEditor(String.class, stringTrimmerEditor);
+    }
 
 }

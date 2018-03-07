@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
@@ -15,7 +17,9 @@ public class Table {
 
     private String name;
 
-    private int columnsAmount;
+    @NotNull
+    @Min(value = 1, message = "at least one column is needed")
+    private Integer columnsAmount;
 
     private List<String> columns;
 

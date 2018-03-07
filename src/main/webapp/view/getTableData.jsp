@@ -10,6 +10,7 @@
 <form:form action="${url}" method="POST" modelAttribute="table">
     <form:input type="text" path="name" title="Table Name"/>
     <form:input type="text" path="columnsAmount"/>
+    <form:errors path = "columnsAmount"/>
     <input type="submit"/>
 </form:form>
 </body>

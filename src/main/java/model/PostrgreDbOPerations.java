@@ -82,15 +82,14 @@ public class PostrgreDbOPerations implements DbOperations {
     }
 
     private Data find(Supplier<String> supplier) {
-        String sql = "SELECT * FROM " + supplier.get();
         List<String> columns;
         try (Statement statement = jdbcTemplate.getDataSource().getConnection().createStatement()) {
-            columns = getColumns(statement.executeQuery(sql));
+            columns = getColumns(statement.executeQuery(supplier.get()));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         List<List<String>> rows = new ArrayList<>();
-        rows.addAll(jdbcTemplate.query(sql, new RowMapper<List<String>>() {
+        rows.addAll(jdbcTemplate.query(supplier.get(), new RowMapper<List<String>>() {
             List<String> row = new ArrayList<>();
             @Override
             public List<String> mapRow(ResultSet rs, int rowNum) throws SQLException {
