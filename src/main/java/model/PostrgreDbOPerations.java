@@ -1,7 +1,7 @@
 package model;
 
 import model.exceptions.MyDbException;
-import model.utils.DbUtils;
+import model.utils.ResourcesUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -33,7 +33,7 @@ public class PostrgreDbOPerations implements DbOperations {
     public DbOperations connect(Properties connectionProperties) {
         try {
             Properties urlProp = new Properties();
-            urlProp.load(DbUtils.getResourceAsInputStream(DEFAULT_PROP_RESOURCE));
+            urlProp.load(ResourcesUtils.getResourceAsInputStream(DEFAULT_PROP_RESOURCE));
 
             jdbcTemplate = new JdbcTemplate(new SimpleDriverDataSource(
                 DriverManager.getDrivers().nextElement(),
@@ -44,12 +44,6 @@ public class PostrgreDbOPerations implements DbOperations {
             throw new MyDbException("Problems with Connection", e);
         }
         return this;
-    }
-
-    @Override
-    public void exit() {
-      /*TODO remove if not needed*/
-
     }
 
     @Override
@@ -155,6 +149,4 @@ public class PostrgreDbOPerations implements DbOperations {
         jdbcTemplate.execute(deleteQuery);
         return selected;
     }
-
-
 }

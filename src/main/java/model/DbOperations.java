@@ -10,8 +10,6 @@ public interface DbOperations {
 
     DbOperations connect(Properties connectionProperties);
 
-    void exit();
-
     List<String> getTables();
 
     void clearTable(String tableName);

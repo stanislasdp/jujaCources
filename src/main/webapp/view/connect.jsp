@@ -11,7 +11,7 @@
         <form:form action="${fromUrl}" method="POST" modelAttribute="connect">
             <table>
                 <tr>
-                    <td>Database3 name</td>
+                    <td>Database name</td>
                     <td>
                     <form:input path="database" id="dbname" />
                     <form:errors path = "database"/>
