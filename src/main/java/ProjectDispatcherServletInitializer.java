@@ -1,3 +1,5 @@
+import config.DatabaseConfig;
+import config.WebConfig;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 public class ProjectDispatcherServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
@@ -5,7 +7,7 @@ public class ProjectDispatcherServletInitializer extends AbstractAnnotationConfi
     @Override
     protected Class<?>[] getRootConfigClasses() {
         //no root config
-        return new Class[]{WebConfig.class, AppSecurityConfig.class};
+        return new Class[]{WebConfig.class, DatabaseConfig.class};
     }
 
     @Override

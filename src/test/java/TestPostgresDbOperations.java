@@ -1,10 +1,8 @@
-import model.DbOperations;
-import model.PostrgreDbOPerations;
+import database.dao.DbOperations;
 import org.junit.Before;
 import org.junit.Ignore;
 
 import static org.powermock.reflect.Whitebox.setInternalState;
-
 
 /**
  * Created by stas on 10/29/17.
@@ -19,6 +17,7 @@ public class TestPostgresDbOperations extends TestDbOperations {
 
     @Override
     public DbOperations getDatabaseManager() {
-        return new PostrgreDbOPerations();
+//        return new PostrgreDbOPerations();
+        return null;
     }
 }

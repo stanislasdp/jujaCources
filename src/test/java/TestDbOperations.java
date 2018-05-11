@@ -1,6 +1,9 @@
 import com.google.common.collect.ImmutableList;
-import model.*;
-import model.exceptions.MyDbException;
+import database.dao.DbOperations;
+import database.dao.MyDbException;
+import database.model.Data;
+import database.model.Row;
+import database.model.SqlTable;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
@@ -35,7 +38,7 @@ public abstract class TestDbOperations {
 
     @BeforeClass
     public static void prepare() {
-        dbOperations = new PostrgreDbOPerations();
+//        dbOperations = new PostrgreDbOPerations();
     }
 
     @Before

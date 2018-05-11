@@ -1,15 +1,15 @@
 package service;
 
 
-import model.DbOperations;
+import database.dao.DbOperations;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
 
-public interface Service {
+public interface CommandsService {
 
-    DbOperations connect(String database, String userName, String password);
+    DbOperations getDbOperations();
 
     List<String> getCommandList();
 

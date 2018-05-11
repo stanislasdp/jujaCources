@@ -1,7 +1,6 @@
-package model;
+package database.model;
 
 import java.util.Collection;
-import java.util.stream.Stream;
 
 /**
  * Created by stas on 10/19/17.

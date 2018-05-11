@@ -1,4 +1,4 @@
-package model.exceptions;
+package database.dao;
 
 /**
  * Created by stas on 10/16/17.

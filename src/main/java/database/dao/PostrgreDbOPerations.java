@@ -1,17 +1,20 @@
-package model;
+package database.dao;
 
-import model.exceptions.MyDbException;
-import model.utils.ResourcesUtils;
+import database.model.Data;
+import database.model.Row;
+import database.model.SqlTable;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.stereotype.Component;
-import java.io.IOException;
-import java.sql.*;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
@@ -25,25 +28,11 @@ import static java.util.stream.Collectors.toList;
 @Scope("prototype")
 public class PostrgreDbOPerations implements DbOperations {
 
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static final String DEFAULT_PROP_RESOURCE = "postGreConnection.properties";
-
-    @Override
-    public DbOperations connect(Properties connectionProperties) {
-        try {
-            Properties urlProp = new Properties();
-            urlProp.load(ResourcesUtils.getResourceAsInputStream(DEFAULT_PROP_RESOURCE));
-
-            jdbcTemplate = new JdbcTemplate(new SimpleDriverDataSource(
-                DriverManager.getDrivers().nextElement(),
-                format(urlProp.getProperty("url") + "%s",
-                    connectionProperties.getProperty("database")), connectionProperties));
-
-        } catch (IOException e) {
-            throw new MyDbException("Problems with Connection", e);
-        }
-        return this;
+    public PostrgreDbOPerations(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -148,5 +137,11 @@ public class PostrgreDbOPerations implements DbOperations {
         final String deleteQuery = format("DELETE FROM %s WHERE %s = '%s'", tableName, column, value);
         jdbcTemplate.execute(deleteQuery);
         return selected;
+    }
+
+    @Override
+    @SneakyThrows
+    public String getUserName() {
+        return jdbcTemplate.getDataSource().getConnection().getMetaData().getUserName();
     }
 }

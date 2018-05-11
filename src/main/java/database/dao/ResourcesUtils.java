@@ -1,4 +1,4 @@
-package model.utils;
+package database.dao;
 
 import java.io.IOException;
 import java.io.InputStream;
